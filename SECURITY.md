@@ -30,4 +30,5 @@ Email: `security@jol.example` (replace with the real security contact).
 
 - EU-only LLM provider chain enforced in `config/model-routing.yaml`.
 - Secrets are supplied via environment variables only (`config/example.env`).
-- Every push is scanned for secrets and analysed with CodeQL.
+- Every push is scanned for secrets (open-source gitleaks CLI in CI) and
+  analysed with CodeQL.

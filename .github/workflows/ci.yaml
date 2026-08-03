@@ -40,9 +40,13 @@ jobs:
         run: python -m pytest
 
       - name: Secret scan (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Open-source gitleaks CLI — no license required (gitleaks-action v2
+        # is commercial and requires a GITLEAKS_LICENSE secret for orgs).
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/scan"
+          zricethezav/gitleaks:latest
+          detect --source /scan --no-banner --redact
+          --exit-code 1 -v
 
   qodana:
     name: Qodana static analysis
