@@ -56,16 +56,21 @@ def parse_frontmatter(path: Path) -> dict:
     return data
 
 
-def validate_config() -> list[str]:
+def check_required_files(paths: list[Path], kind: str) -> list[str]:
     errors: list[str] = []
-    for path in REQUIRED_CONFIG_FILES:
+    for path in paths:
         if not path.is_file():
-            errors.append(f"missing config file: {path.relative_to(ROOT)}")
+            errors.append(f"missing {kind} file: {path.relative_to(ROOT)}")
             continue
         try:
             load_yaml(path)
         except (yaml.YAMLError, ValueError) as exc:
             errors.append(f"{path.relative_to(ROOT)}: {exc}")
+    return errors
+
+
+def validate_config() -> list[str]:
+    errors = check_required_files(REQUIRED_CONFIG_FILES, "config")
 
     routing_path = ROOT / "config" / "model-routing.yaml"
     if routing_path.is_file():
@@ -103,15 +108,7 @@ def validate_skills() -> list[str]:
 
 
 def validate_memory() -> list[str]:
-    errors: list[str] = []
-    for path in REQUIRED_MEMORY_FILES:
-        if not path.is_file():
-            errors.append(f"missing memory file: {path.relative_to(ROOT)}")
-            continue
-        try:
-            load_yaml(path)
-        except (yaml.YAMLError, ValueError) as exc:
-            errors.append(f"{path.relative_to(ROOT)}: {exc}")
+    errors = check_required_files(REQUIRED_MEMORY_FILES, "memory")
 
     schema_path = ROOT / "memory" / "schema.yaml"
     policy_path = ROOT / "memory" / "retention-policy.yaml"
@@ -139,11 +136,11 @@ def validate() -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] = None) -> int:
     args = sys.argv[1:] if argv is None else argv
     if args and args[0] == "validate":
         return validate()
-    print(__doc__.strip())
+    print((__doc__ or "").strip())
     return 2 if args else 0
 
 
