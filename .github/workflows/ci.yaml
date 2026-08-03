@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 0
 
       - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2026.1
+        uses: JetBrains/qodana-action@v2026.2
         env:
           # Requires the QODANA_TOKEN repository secret (Qodana Cloud project).
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
