@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in Hermes or this repository is broken.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Observed behaviour vs expected behaviour.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - config
+        - skill
+        - memory/retention
+        - prompts
+        - CI/tooling
+        - docs
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Minimal steps or message that triggered the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Evidence
+      description: Log excerpts, audit entries. Redact secrets and PII first.
+    validations:
+      required: false
+  - type: dropdown
+    id: security
+    attributes:
+      label: Security-sensitive?
+      description: If yes, do NOT file details here — follow SECURITY.md.
+      options:
+        - "no"
+        - "yes (details withheld)"
+    validations:
+      required: true

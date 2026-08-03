@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Secrets & local env
+.env
+.env.*
+config/*.local.yaml
+!config/example.env
+
+# IDE
+.idea/
+.vscode/
+.pycharm/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent runtime artefacts (local runs)
+runtime/
+*.log

@@ -1,0 +1,25 @@
+# Telegram messaging gateway.
+
+gateway:
+  name: telegram
+  enabled: true
+  bot_token_env: HERMES_TELEGRAM_BOT_TOKEN
+
+access:
+  # Only these chat IDs may invoke the agent. Empty list = deny all.
+  allowed_chat_ids: ${HERMES_TELEGRAM_ALLOWED_CHAT_IDS}
+  # Skills with risk_level >= this require an explicit confirmation message.
+  confirmation_required_above: medium
+
+behaviour:
+  max_message_chars: 4000        # Telegram limit is 4096; leave headroom
+  reply_in_thread: true
+  rate_limit:
+    per_minute: 20
+
+redaction:
+  # Strip before sending: never expose raw infra output containing secrets.
+  patterns:
+    - 'password\s*[:=]\s*\S+'
+    - 'api[_-]?key\s*[:=]\s*\S+'
+    - 'token\s*[:=]\s*\S+'

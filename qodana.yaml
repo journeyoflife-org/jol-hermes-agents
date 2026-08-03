@@ -1,0 +1,35 @@
+# Qodana — Static Analysis Configuration
+# https://www.jetbrains.com/help/qodana/
+#
+# Run locally:  qodana scan
+# Run in CI:    see .github/workflows/ci.yaml (qodana job)
+# PyCharm:      Tools → Qodana → Try Code Analysis with Qodana
+---
+version: "1.0"
+
+# CLI 2026.x+: pin version to match CLI (update when upgrading CLI)
+linter: jetbrains/qodana-python:2026.1
+
+profile:
+  name: qodana.recommended
+
+include:
+  - name: CheckDependencyLicenses
+  - name: PyTypeChecker
+  - name: PyUnresolvedReferences
+  - name: PyShadowingNames
+  - name: PyRedundantParentheses
+  - name: PyUnusedLocal
+
+exclude:
+  - name: All
+    paths:
+      - .venv
+      - .git
+      - __pycache__
+      - .pytest_cache
+      - .mypy_cache
+      - htmlcov
+
+# Fail the quality gate if new issues exceed threshold
+failThreshold: 0

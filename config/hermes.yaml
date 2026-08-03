@@ -1,0 +1,41 @@
+# Hermes — main agent configuration.
+# Secrets are referenced via ${ENV_VAR}; never put literal secrets here.
+
+agent:
+  name: hermes
+  role: JOL operations agent
+  version: 0.1.0
+  timezone: Europe/Berlin
+  locale: en
+
+runtime:
+  # Where the agent reads declarative artefacts from.
+  config_dir: config
+  skills_dir: skills
+  memory_dir: memory
+  context_files:
+    - context/AGENTS.md
+  prompts:
+    system: prompts/system-prompt.md
+    master: prompts/master-prompt.md
+
+memory:
+  schema: memory/schema.yaml
+  retention_policy: memory/retention-policy.yaml
+  store:
+    type: sqlite           # swap for the real store in deployment
+    path: ${HERMES_MEMORY_PATH}
+
+gateways:
+  - telegram              # see config/gateway/telegram.yaml
+
+routing:
+  file: config/model-routing.yaml
+
+policy:
+  file: config/agent-policy.yaml
+
+logging:
+  level: INFO
+  # Never log full prompts or memory contents; see docs/data-flow.md.
+  redact_pii: true

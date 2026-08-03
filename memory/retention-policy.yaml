@@ -1,0 +1,46 @@
+# GDPR retention policy for Hermes memory.
+#
+# Principle of storage limitation (Art. 5(1)(e) GDPR): keep only what is
+# needed, only as long as needed. Every namespace in schema.yaml MUST have
+# a rule here; the purge job must be able to execute each rule mechanically.
+# Changes to this file require a DPIA review (docs/dpia-ai-processing.md).
+
+version: 1
+
+default:
+  retention_days: 30
+  purge_method: hard_delete      # hard_delete | anonymise
+  purge_schedule: daily
+
+retention:
+  ops.reports:
+    retention_days: 90           # quarterly operational review cycle
+    purge_method: hard_delete
+
+  ops.incidents:
+    retention_days: 365          # post-incident review + audit trail
+    purge_method: anonymise      # keep timeline, strip people and raw data
+
+  ops.cleanup:
+    retention_days: 90
+    purge_method: hard_delete
+
+  compliance.findings:
+    retention_days: 730          # compliance audit window
+    purge_method: anonymise
+
+  bitrix.notifications:
+    retention_days: 30           # metadata only; the source of truth is Bitrix24
+    purge_method: hard_delete
+
+  bitrix.tasks:
+    retention_days: 30           # metadata only; the source of truth is Bitrix24
+    purge_method: hard_delete
+
+data_subject_rights:
+  # How erasure/access requests are honoured for agent memory.
+  erasure:
+    max_days: 30
+    method: hard_delete_by_reference   # purge all records referencing the subject
+  access:
+    export_format: json

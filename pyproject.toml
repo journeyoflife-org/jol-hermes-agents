@@ -1,0 +1,40 @@
+[project]
+name = "jol-hermes-agents"
+version = "0.1.0"
+description = "Hermes — JOL operations agent: config-first, skill-driven, EU-only LLM routing"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "yamllint>=1.35",
+]
+
+[project.scripts]
+hermes = "main:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Flat-layout repo: the only importable module is main.py.
+py-modules = ["main"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

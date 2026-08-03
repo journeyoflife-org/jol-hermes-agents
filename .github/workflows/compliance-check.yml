@@ -1,0 +1,61 @@
+name: Compliance check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "config/**"
+      - "memory/**"
+      - "skills/**"
+  pull_request:
+    paths:
+      - "config/**"
+      - "memory/**"
+      - "skills/**"
+  schedule:
+    # Weekly drift check on the default branch.
+    - cron: "30 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  compliance:
+    name: EU routing + retention coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: EU-only routing assertion
+        run: |
+          python - <<'PY'
+          import yaml
+          cfg = yaml.safe_load(open("config/model-routing.yaml"))
+          bad = [p["name"] for p in cfg["providers"]
+                 if str(p.get("region", "")).lower() not in {"eu", "eu-central", "eu-west"}]
+          assert not bad, f"non-EU providers: {bad}"
+          print("EU-only routing OK")
+          PY
+
+      - name: Retention coverage assertion
+        run: |
+          python - <<'PY'
+          import yaml
+          schema = yaml.safe_load(open("memory/schema.yaml"))
+          policy = yaml.safe_load(open("memory/retention-policy.yaml"))
+          have = {ns["namespace"] for ns in schema["namespaces"]}
+          covered = set(policy.get("retention", {}))
+          missing = have - covered
+          assert not missing, f"namespaces without retention: {missing}"
+          print("retention coverage OK")
+          PY

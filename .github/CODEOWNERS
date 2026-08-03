@@ -1,0 +1,11 @@
+# Behaviour-shaping artefacts need owner review.
+/config/                 @jol/ops-leads
+/memory/                 @jol/ops-leads @jol/dpo
+/config/agent-policy.yaml @jol/ops-leads @jol/dpo
+/prompts/                @jol/ops-leads
+/context/                @jol/ops-leads
+/.github/workflows/      @jol/ops-leads
+/docs/dpia-ai-processing.md @jol/dpo
+
+# Skills default to ops review via the fallback below.
+/skills/                 @jol/ops-leads

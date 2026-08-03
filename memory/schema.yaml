@@ -1,0 +1,66 @@
+# Memory structure definition for Hermes.
+#
+# Every memory write MUST target one of these namespaces and respect the
+# field contract below. Enforcement: tests/test_memory_schema.py.
+# Retention per namespace lives in retention-policy.yaml — each namespace
+# defined here MUST have a retention rule there.
+
+version: 1
+
+common_fields:
+  - name: id
+    type: string
+    required: true
+  - name: created_at
+    type: datetime
+    required: true
+  - name: source_skill
+    type: string
+    required: false
+
+namespaces:
+  - namespace: ops.reports
+    description: Morning report digests.
+    fields:
+      - { name: digest, type: markdown, required: true }
+      - { name: verdict, type: string, required: true }
+
+  - namespace: ops.incidents
+    description: Incident triage cards.
+    fields:
+      - { name: severity, type: string, required: true }
+      - { name: scope, type: string, required: true }
+      - { name: status, type: string, required: true }
+
+  - namespace: ops.cleanup
+    description: Disk cleanup plans and reclamation reports.
+    fields:
+      - { name: host, type: string, required: true }
+      - { name: reclaimed_mb, type: integer, required: true }
+      - { name: confirmed_by, type: string, required: true }
+
+  - namespace: compliance.findings
+    description: Compliance scan findings and scorecards.
+    fields:
+      - { name: scan_run_id, type: string, required: true }
+      - { name: severity, type: string, required: true }
+      - { name: check, type: string, required: true }
+
+  - namespace: bitrix.notifications
+    description: Delivery metadata for Bitrix24 notifications (no bodies with personal data).
+    fields:
+      - { name: target_id, type: string, required: true }
+      - { name: status, type: string, required: true }
+
+  - namespace: bitrix.tasks
+    description: Metadata of Bitrix24 tasks created by the agent.
+    fields:
+      - { name: task_id, type: string, required: true }
+      - { name: url, type: string, required: true }
+      - { name: assignee, type: string, required: false }
+
+prohibited_content:
+  - credentials
+  - payment_data
+  - health_data
+  - raw_customer_pii

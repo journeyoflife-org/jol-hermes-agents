@@ -1,0 +1,35 @@
+# EU-only LLM provider chain.
+#
+# Policy: every provider MUST have an EU region. CI (main.py validate and
+# compliance-check workflow) fails the build if a non-EU region appears here.
+# Do not add providers without an EU DPA in place — see docs/dpia-ai-processing.md.
+
+default: primary
+
+providers:
+  - name: primary
+    vendor: mistral              # EU vendor (Paris, FR)
+    region: eu
+    model: mistral-large-latest
+    api_key_env: HERMES_PRIMARY_API_KEY
+    timeout_s: 60
+    max_retries: 2
+
+  - name: fallback
+    vendor: ovh-ai               # EU-hosted endpoint (France)
+    region: eu
+    model: llama-3.1-70b-instruct
+    api_key_env: HERMES_FALLBACK_API_KEY
+    timeout_s: 90
+    max_retries: 1
+
+routing:
+  strategy: failover             # primary -> fallback, in order
+  fallback_on:
+    - timeout
+    - rate_limited
+    - server_error
+  # Never send these categories to any provider.
+  blocked_data_classes:
+    - credentials
+    - payment_data

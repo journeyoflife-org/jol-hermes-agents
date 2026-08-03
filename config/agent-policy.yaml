@@ -1,0 +1,101 @@
+# Behavioural guardrails for Hermes.
+#
+# This is the single canonical policy file (formerly split across
+# agent-policy.yaml and routing-policy.yaml in earlier drafts).
+# Changes require CODEOWNER review.
+
+policy:
+  version: "1.0"
+  last_reviewed: "2026-08-03"
+  review_interval_days: 90
+
+# Autonomy levels: the higher the level, the more gatekeeping.
+autonomy:
+  # Level 0: Pure observation (no side effects, no writes)
+  level_0:
+    description: "Read-only analysis and reporting — no side effects"
+    requires_approval: false
+    actions:
+      - read_logs
+      - check_service_status
+      - generate_report
+      - query_metrics
+
+  # Level 1: Observe & Report (safe, reversible reads + list operations)
+  level_1:
+    description: "Safe, reversible actions only"
+    requires_approval: false
+    actions:
+      - read_logs
+      - check_service_status
+      - generate_report
+      - query_metrics
+      - list_resources
+
+  # Level 2: Controlled actions requiring confirmation for sensitive operations
+  level_2:
+    description: "Controlled actions requiring human confirmation"
+    requires_approval: true
+    actions:
+      - restart_service
+      - scale_resource
+      - modify_config
+      - create_ticket
+      - notify_team
+
+  # Level 3: Not permitted in this repository by default
+  level_3:
+    description: "Autonomous execution — prohibited by default"
+    requires_approval: true
+    enabled: false  # enable only after security review
+    actions:
+      - rotate_logs
+      - clear_cache
+      - run_backup
+
+guardrails:
+  eu_only: true                    # hard constraint, enforced by CI
+  pii_in_prompts: deny             # strip PII before provider calls
+  secrets_in_prompts: deny
+  autonomous_actions:
+    read_only: allow
+    mutating_infrastructure: require_confirmation
+    data_deletion: require_confirmation_and_second_factor
+
+# Never permitted at any autonomy level.
+forbidden:
+  - exfiltrate_data
+  - modify_auth_credentials
+  - disable_security_controls
+  - access_non_eu_providers
+  - store_pii_unencrypted
+  - execute_unverified_code
+  - bypass_rate_limits
+
+escalation:
+  # When uncertain beyond this confidence, ask a human instead of acting.
+  min_confidence_to_act: 0.8
+  notify:
+    gateway: telegram
+    channel: ops-alerts
+  rules:
+    - condition: "incident_severity >= critical"
+      action: notify_immediately
+      target: on_call_engineer
+      max_response_time_minutes: 5
+    - condition: "compliance_violation_detected"
+      action: halt_and_report
+      target: security_lead
+      max_response_time_minutes: 15
+    - condition: "provider_chain_exhausted"
+      action: degrade_gracefully
+      target: engineering_team
+      max_response_time_minutes: 30
+
+memory_policy:
+  respect_retention: true          # see memory/retention-policy.yaml
+  cross_conversation_recall: scoped # only within same namespace
+
+audit:
+  log_every_skill_invocation: true
+  log_provider_calls: metadata_only # never full prompt/completion
