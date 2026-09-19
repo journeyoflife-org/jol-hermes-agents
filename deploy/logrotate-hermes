@@ -1,0 +1,12 @@
+# Logrotate config for the systemd deployment path (audit finding M7).
+# Install: /etc/logrotate.d/hermes
+/var/log/hermes/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 hermes hermes
+    su hermes hermes
+}

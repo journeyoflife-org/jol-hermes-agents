@@ -1,0 +1,29 @@
+# Secrets and local state must never enter the image (audit finding H3).
+.env
+.env.*
+config/*.local.yaml
+runtime/
+*.log
+
+# VCS / IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Python build/test artefacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+tests/
+
+# Docs and audit artefacts are not needed at runtime
+docs/
+.github/
+deploy/

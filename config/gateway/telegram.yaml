@@ -6,7 +6,11 @@ gateway:
   bot_token_env: HERMES_TELEGRAM_BOT_TOKEN
 
 access:
-  # Only these chat IDs may invoke the agent. Empty list = deny all.
+  # Only these chat IDs may invoke the agent.
+  # ACL contract (audit finding H1): ${HERMES_TELEGRAM_ALLOWED_CHAT_IDS} is a
+  # comma-separated list of numeric chat IDs, e.g. "123456789,987654321".
+  # Empty or unset = deny all. The runtime MUST refuse to start when the
+  # value is empty — an open bot violates docs/threat-model.md (B1).
   allowed_chat_ids: ${HERMES_TELEGRAM_ALLOWED_CHAT_IDS}
   # Skills with risk_level >= this require an explicit confirmation message.
   confirmation_required_above: medium

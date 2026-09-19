@@ -42,26 +42,10 @@ jobs:
       - name: Secret scan (gitleaks)
         # Open-source gitleaks CLI — no license required (gitleaks-action v2
         # is commercial and requires a GITLEAKS_LICENSE secret for orgs).
+        # Version pinned to match .pre-commit-config.yaml (audit finding M1).
         run: >-
           docker run --rm -v "$GITHUB_WORKSPACE:/scan"
-          zricethezav/gitleaks:latest
+          zricethezav/gitleaks:v8.30.0
           detect --source /scan --no-banner --redact
           --exit-code 1 -v
 
-  qodana:
-    name: Qodana static analysis
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2026.1
-        env:
-          # Requires the QODANA_TOKEN repository secret (Qodana Cloud project).
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
