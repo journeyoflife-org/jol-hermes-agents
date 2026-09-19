@@ -2,7 +2,7 @@
 
 Audit date: 2026-08-13 · commit `dc79827`.
 Legend: `[x]` verified during this audit · `[ ]` open gate · `[~]` blocked on
-runtime (finding C1). Findings reference `AUDIT_REPORT.md`.
+runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings reference `AUDIT_REPORT.md`.
 
 ## Phase 1 — repository audits
 
@@ -89,8 +89,8 @@ runtime (finding C1). Findings reference `AUDIT_REPORT.md`.
 
 - **Gate count (post-remediation 2026-08-13)**: 31 passed · 13 open ·
   7 blocked on runtime (C1)
-- **Verdict**: NO-GO for full mandate scope until C1 (runtime attachment) is
-  resolved; CONDITIONAL GO as declarative definition repo consumed by an
-  audited runtime. All same-day-fixable findings (C2 contract, H1, H2, H3,
+- **Verdict**: CONDITIONAL GO as declarative definition repo. C1 resolved
+  2026-09-19: `jol-hermes-agents` is definition-only; runtime readiness gate
+  moves to future runtime repo. No runtime repo exists in the fleet today. All same-day-fixable findings (C2 contract, H1, H2, H3,
   H4, M1, M4, M6, M7, I6, L2) are closed and build/test-verified. See
   `AUDIT_REPORT.md` → "Remediation log".

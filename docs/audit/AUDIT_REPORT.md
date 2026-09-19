@@ -244,7 +244,7 @@ See `CHECKLIST.md` for the trackable gate list.
 | M6 | **fixed** | `config/example.env` default memory path is now an absolute volume path with local-dev note. |
 | M7 (partial) | **fixed** | logrotate config shipped (`deploy/logrotate-hermes`). |
 | I6 | **fixed** | `install.sh`: idempotent, Python ≥3.12 gate, fail-fast messages; re-run verified (`install: OK`). |
-| C1 | **open** | Runtime orchestration still lives outside this repo — unchanged by design; gate stands. |
+| C1 | **resolved (2026-09-19)** | `jol-hermes-agents` formally declared **definition-only** (declarative contracts, no runtime). Readiness gate for runtime deployment moves to whichever future repo implements the runtime orchestration layer. No runtime repo exists in the fleet today. AGENTS.md §2.4 updated. |
 | M2, M3, M5, M8, L1, L3–L5 | **open** | Require org-level decisions (action SHA pins, real security contact, purge job implementation, backup tooling) — tracked in `CHECKLIST.md`. |
 
 Post-remediation verification (all exit 0): `main.py validate` · `pytest`
