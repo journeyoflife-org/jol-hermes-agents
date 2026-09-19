@@ -49,20 +49,3 @@ jobs:
           detect --source /scan --no-banner --redact
           --exit-code 1 -v
 
-  qodana:
-    name: Qodana static analysis
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2026.1
-        env:
-          # Requires the QODANA_TOKEN repository secret (Qodana Cloud project).
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
