@@ -10,7 +10,10 @@ providers:
   - name: primary
     vendor: mistral              # EU vendor (Paris, FR)
     region: eu
-    model: mistral-large-latest
+    # Pinned identifier — never use *-latest aliases (audit finding H2).
+    # Re-pin deliberately after evaluating each new model release.
+    model: mistral-large-2411
+    context_length: 128000       # verified >= 64000 by main.py validate
     api_key_env: HERMES_PRIMARY_API_KEY
     timeout_s: 60
     max_retries: 2
@@ -19,6 +22,7 @@ providers:
     vendor: ovh-ai               # EU-hosted endpoint (France)
     region: eu
     model: llama-3.1-70b-instruct
+    context_length: 128000       # verified >= 64000 by main.py validate
     api_key_env: HERMES_FALLBACK_API_KEY
     timeout_s: 90
     max_retries: 1

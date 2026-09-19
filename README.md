@@ -52,6 +52,8 @@ for your environment before running the agent.
 - [Data flow](docs/data-flow.md) — where data enters, moves, and exits
 - [Threat model](docs/threat-model.md)
 - [DPIA: AI processing](docs/dpia-ai-processing.md)
+- [Audit 2026-08-13](docs/audit/AUDIT_REPORT.md) — readiness assessment,
+  deployment guide, security posture, go-live checklist
 - [Runbooks](docs/runbooks/)
 
 ## Security

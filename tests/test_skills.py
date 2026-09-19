@@ -20,8 +20,13 @@ skill_files = sorted(SKILLS_DIR.rglob("*.md"))
 def parse_frontmatter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     assert text.startswith("---"), f"{path}: file must start with YAML frontmatter"
-    _, raw, _ = text.split("---", 2)
-    data = yaml.safe_load(raw)
+    lines = text.splitlines()
+    closing = next(
+        (i for i, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
+        None,
+    )
+    assert closing is not None, f"{path}: unterminated YAML frontmatter"
+    data = yaml.safe_load("\n".join(lines[1:closing]))
     assert isinstance(data, dict), f"{path}: frontmatter must be a mapping"
     return data
 
@@ -64,6 +69,11 @@ def test_skill_ids_are_unique():
 @pytest.mark.parametrize("path", skill_files, ids=lambda p: str(p.relative_to(ROOT)))
 def test_skill_body_has_content(path: Path):
     text = path.read_text(encoding="utf-8")
-    _, _, body = text.split("---", 2)
+    lines = text.splitlines()
+    closing = next(
+        (i for i, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
+        None,
+    )
+    body = "\n".join(lines[closing + 1 :]) if closing is not None else ""
     assert body.strip(), f"{path}: skill body is empty"
     assert "## " in body, f"{path}: skill body must contain structured sections"
