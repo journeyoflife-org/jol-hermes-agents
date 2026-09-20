@@ -4,7 +4,7 @@ PIP ?= .venv/bin/pip
 .PHONY: setup validate lint test smoke clean
 
 setup:
-	python3 -m venv .venv || true
+	python3 -m venv .venv
 	$(PIP) install --upgrade pip
 	$(PIP) install -e ".[dev]"
 
@@ -13,7 +13,7 @@ validate:
 
 lint:
 	$(PY) -m ruff check .
-	$(PY) -m yamllint -c .yamllint config/ memory/ || true
+	$(PY) -m yamllint -c .yamllint config/ memory/
 
 test:
 	$(PY) -m pytest
@@ -22,4 +22,5 @@ smoke:
 	bash scripts/smoke-test.sh
 
 clean:
-	rm -rf .pytest_cache .ruff_cache **/__pycache__
+	rm -rf .pytest_cache .ruff_cache
+	find . -name __pycache__ -type d -not -path "./.venv/*" -exec rm -rf {} +

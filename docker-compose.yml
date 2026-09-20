@@ -1,0 +1,41 @@
+# Production compose for the Hermes agent definition image.
+# Audit finding H3: hardening per mandate §3.2.
+# Secrets come exclusively from .env (git-ignored, chmod 600) — never inline.
+name: jol-hermes
+
+services:
+  hermes:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - hermes-state:/var/lib/hermes
+    # --- security hardening (mandate §3.2) ---
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # Egress only (LLM APIs, Telegram polling); no published ports.
+    networks:
+      - hermes-net
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4g
+          pids: 512
+    healthcheck:
+      test: ["CMD", "python", "main.py", "validate"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  hermes-state:
+
+networks:
+  hermes-net:
+    driver: bridge

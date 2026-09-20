@@ -1,0 +1,33 @@
+# Systemd unit for non-Docker deployment (audit finding H3).
+# Install: /etc/systemd/system/hermes.service
+# Requires: dedicated unprivileged user `hermes`, repo checkout at
+# /opt/hermes with .venv created via `make setup`, secrets in
+# /home/hermes/.hermes/.env (chmod 600, owned hermes:hermes).
+
+[Unit]
+Description=Hermes JOL operations agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+# '-' prefix: unit starts even before the env file exists; the agent must
+# then fail fast on missing secrets (skills/bitrix pattern).
+EnvironmentFile=-/home/hermes/.hermes/.env
+WorkingDirectory=/opt/hermes
+ExecStart=/opt/hermes/.venv/bin/hermes
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/log/hermes/agent.log
+StandardError=append:/var/log/hermes/errors.log
+# --- sandboxing ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/var/lib/hermes /var/log/hermes
+
+[Install]
+WantedBy=multi-user.target
