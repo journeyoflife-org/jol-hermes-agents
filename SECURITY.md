@@ -10,7 +10,19 @@
 
 **Do not open a public issue for security problems.**
 
-Email: `security@jol.example` (replace with the real security contact).
+Preferred channel — GitHub private vulnerability reporting:
+
+1. Go to <https://github.com/journeyoflife-org/jol-hermes-agents/security/advisories>
+2. Choose **Report a vulnerability** (draft advisory, visible only to repo
+   admins and the `@journeyoflife-org/security` team).
+
+> Org admins: private vulnerability reporting must be enabled under
+> Settings → Code security for the link above to accept reports
+> (status unverified as of the 2026-09-29 audit — finding M3).
+
+Fallback until a real mailbox is published: contact the
+`@journeyoflife-org/security` team via the org's internal channels.
+(`security@jol.example` is a placeholder — do NOT use it.)
 
 - Include a description, reproduction steps, and affected component
   (config, skill, gateway, memory).

@@ -12,7 +12,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
       `config/gateway/telegram.yaml` (`main.py validate` exit 0)
 - [x] `SOUL.md` equivalent: `prompts/system-prompt.md` + `context/AGENTS.md` (I1)
 - [x] `MEMORY.md` equivalent: `memory/schema.yaml` + `memory/retention-policy.yaml`
-- [ ] `USER.md` equivalent — not defined (I1; decide if needed)
+- [x] `USER.md` equivalent — judged not needed (2026-09-29): team-scoped ops agent; requester identity is the gateway chat-ID ACL
 - [x] Manifest: `pyproject.toml` (Python ≥3.12, `pyproject.toml:6`); no lock file (L5-adjacent)
 - [x] `Dockerfile` + `docker-compose.yml` + `.dockerignore` — landed & build-verified (H3, remediation log)
 - [x] `.env.example` equivalent committed & gitignored: `config/example.env`, `.gitignore:14-18`
@@ -49,20 +49,20 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 - [~] Gateway latency <5 s + session continuation
 - [~] Cron job registration + delivery (`scheduled-morning-run.md` path)
 - [~] Destructive-command sandbox test (mandate constraint)
-- [x] Repo-level suite: `main.py validate`, `pytest` (27/27), `lint.sh`, `smoke-test.sh` — all exit 0
+- [x] Repo-level suite: `main.py validate`, `pytest` (41/41 as of 2026-09-29), `lint.sh`, `smoke-test.sh` — all exit 0
 
 ## Security hardening gate
 
-- [ ] `.env` permissions `600` on target host (deploy step)
+- [x] `.env` permissions `600` — enforced on audit host 2026-09-29 (`stat` verified); repeat on every deploy target
 - [x] `config/` contains no plaintext secrets
 - [x] Approval never "off" — level 3 disabled, gates on ≥level 2 (`config/agent-policy.yaml:36-50`)
 - [ ] Sandbox backend for tool execution decided & tested (runtime decision)
 - [ ] Telegram `allowed_chat_ids` populated and verified non-empty (operator + runtime gate)
-- [ ] Memory store (`${HERMES_MEMORY_PATH}`) backed up before first run (M8)
+- [x] Memory store backup tooling: `scripts/backup_memory.py` (sqlite backup API + `integrity_check`, M8); run it as deploy step 0 and before Curator/GEPA
 - [x] Log rotation configured (`deploy/logrotate-hermes`, M7)
 - [ ] SSH/Docker exposure: fail2ban or firewall rules on host
 - [x] No telemetry/external leakage in shipped source (verified by code scan)
-- [ ] `SECURITY.md` contact replaced from placeholder `security@jol.example` (M3)
+- [x] `SECURITY.md` reporting channel: GitHub private advisories documented (M3); org admin must enable private vulnerability reporting (gate noted in file)
 
 ## Documentation & governance
 
@@ -72,25 +72,31 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 - [x] Runbooks: deploy, rotate secrets, kill switch, rollback
       (`docs/runbooks/operating-hermes.md`)
 - [x] Threat model + data flow + DPIA on file (`docs/`)
-- [ ] Release tag cut (v0.1.0); production never runs untagged `main` (L5)
+- [ ] Release tag cut (v0.1.0) **after** the 2026-09-29 remediation batch merges; production never runs untagged `main` (L5)
 - [x] Pin gitleaks image tag `v8.30.0` (M1)
-- [ ] Pin GitHub Action SHAs (M2; Dependabot covers updates weekly)
+- [x] Pin GitHub Action SHAs (M2) — all actions SHA-pinned 2026-09-29 at verified current majors (checkout/setup-python v7, codeql-action v4); Qodana removed entirely upstream (PR #10 deleted `qodana.yaml`; deletion accepted in merge resolution)
+- [x] Single CODEOWNERS source of truth (N1) — root file merged with fine-grained rules, teams verified via `gh api`; stale `.github/CODEOWNERS` removed
 
 ## Monitoring, backup & DR
 
 - [ ] Alerting on `provider_chain_exhausted` escalation
       (`config/agent-policy.yaml:90-93`) wired in runtime
-- [ ] Retention purge job implemented + monitored (M5 — GDPR gate)
-- [ ] Backup of memory store + `skills/` snapshot before Curator/GEPA runs
-      (mandate constraint; M8)
+- [x] Retention purge tool implemented: `scripts/retention_purge.py` (hard_delete namespaces; `anonymise` explicitly runtime-owned, M5)
+- [ ] Purge job scheduled (host cron, `daily` per policy) + monitored
+- [x] Backup of memory store (`scripts/backup_memory.py`); `skills/` snapshot = git tag/commit (M8)
 - [ ] Restore drill scheduled per `skills/infrastructure/backup-verify.md`
 
 ## Release decision
 
-- **Gate count (post-remediation 2026-08-13)**: 31 passed · 13 open ·
-  7 blocked on runtime (C1)
+- **Gate count (post-remediation round 2, 2026-09-29)**: 38 passed · 11 open ·
+  9 deferred to the future runtime repo
 - **Verdict**: CONDITIONAL GO as declarative definition repo. C1 resolved
   2026-09-19: `jol-hermes-agents` is definition-only; runtime readiness gate
-  moves to future runtime repo. No runtime repo exists in the fleet today. All same-day-fixable findings (C2 contract, H1, H2, H3,
-  H4, M1, M4, M6, M7, I6, L2) are closed and build/test-verified. See
-  `AUDIT_REPORT.md` → "Remediation log".
+  moves to future runtime repo. No runtime repo exists in the fleet today.
+  Round 1 closed: C2 contract, H1, H2, H3, H4, M1, M4, M6, M7, I6, L2.
+  Round 2 (2026-09-29) closed: M2 (action SHAs), M3 (reporting channel),
+  M5 (purge tool), M8 (backup tool), L1 (dotenv used), L4/N1 (CODEOWNERS
+  merged, teams verified), `.env` 600. Remaining opens are operator/org
+  gates (`.env` values, tool-calling verification, fail2ban, purge
+  scheduling, restore drill, release tag). See `AUDIT_REPORT.md` →
+  "Remediation log".
