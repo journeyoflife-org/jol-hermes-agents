@@ -1,11 +1,10 @@
 name: CodeQL
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-  schedule:
-    - cron: "15 4 * * 2"
+  # Manual-only: GitHub Actions minutes are limited (audit constraint 2026-09-29).
+  # CodeQL is low-value for this repo (no web server / user input / SQL).
+  # Run on-demand via: gh workflow run codeql.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
