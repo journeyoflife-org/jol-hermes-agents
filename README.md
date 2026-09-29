@@ -41,6 +41,13 @@ make setup      # create .venv and install dev dependencies
 make validate   # validate config/, skills/, memory schema
 make lint       # ruff + yamllint-style checks
 make test       # run the test suite
+make hooks      # run every pre-commit hook against every file
+```
+
+Install the git hook once per clone so the checks run before every commit:
+
+```bash
+make hooks-install
 ```
 
 Copy `config/example.env` to `.env` (never committed) and fill in the values

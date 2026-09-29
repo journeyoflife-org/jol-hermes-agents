@@ -53,3 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontmatter parsing (`main.py`, `tests/test_skills.py`) is line-based and
   tolerates `---` horizontal rules inside skill bodies.
 - CI secret scan pinned to `zricethezav/gitleaks:v8.30.0` (was `:latest`).
+- `pre-commit` is now a declared dev dependency and is runnable: `make hooks`
+  executes every hook against every file and `make hooks-install` wires the git
+  hook into a clone. Previously `.pre-commit-config.yaml` was cited as a merge
+  gate and its gitleaks hook recorded as "enforced" in
+  `docs/audit/SECURITY_POSTURE.md`, while `pre-commit` was absent from the dev
+  extras, from `uv.lock` and from the `Makefile` — a declared control that
+  could not execute. Verified: `pre-commit run --all-files` passes all 9 hooks
+  (ruff, ruff-format, check-yaml, large-files, merge-conflict,
+  detect-private-key, end-of-file, trailing-whitespace, gitleaks) and modifies
+  no file.
