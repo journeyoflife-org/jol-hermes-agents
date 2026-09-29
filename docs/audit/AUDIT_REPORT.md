@@ -290,3 +290,23 @@ run locally via `scripts/local-validate.sh` + `.pre-commit-config.yaml`.
 
 Round-3 verification: `yamllint` clean on modified workflows ·
 `local-validate.sh` all green (41/41 tests) · `ruff check` clean.
+
+## Remediation log — round 4 (2026-09-29, solo-operator governance)
+
+Context: owner is the sole developer. CODEOWNERS requires code-owner review
+but no second reviewer exists. Admin bypass used twice (PR #11, #12).
+Compensating controls documented in `REVIEW_POLICY.md`.
+
+| Item | Judgement | Fix & verification |
+|---|---|---|
+| Review bottleneck | **fixed (documented)** — solo operator cannot fulfill separation-of-duties via CODEOWNERS alone | `REVIEW_POLICY.md`: 48h cooling-off, self-review checklist, automated gates as primary control, compliance mapping (SOC2/ISO/GDPR), transition trigger. `CODEOWNERS` header references the policy. Admin bypass remains the sanctioned lane until team grows |
+| Cooling-off clock ambiguity | **fixed** — the policy required 48h open but never said whether commits pushed after review begins restart that period; hit in practice the same day on PR #14 | `REVIEW_POLICY.md` §2.1: the clock runs from the later of PR open or the last *substantive* commit. Substantive = code/scripts/tests, `config/`, `memory/`, `prompts/`, the dependency set, or any change to a declared control, autonomy level, data class, retention period or approval requirement. Two conditions on every post-review push: the author classifies the commit in a PR comment, and the reviewer reads the final diff. Anti-abuse: a change to a control's *meaning* is substantive however labelled, and more than two restarts means close and reopen |
+| Stale transition instruction | **fixed** — the transition action told the operator to update `.github/CODEOWNERS`, deleted under finding N1, so the documented exit path pointed at a file that does not exist | Now names the root `CODEOWNERS` as the only file GitHub reads, and includes removing the solo-operator note from the `CODEOWNERS` header comment as well as from the policy |
+
+Round-4 verification: `REVIEW_POLICY.md` created, `CODEOWNERS` updated with
+solo-operator-phase comment, CHANGELOG + audit docs updated.
+
+Round-4 addendum (2026-09-29, same day): §2.1 added and the transition action
+corrected. Both are gaps found while *operating* the policy across PRs #14 and
+#15, not defects in the original draft; they are recorded here rather than
+silently folded into the row above so the sequence stays traceable.

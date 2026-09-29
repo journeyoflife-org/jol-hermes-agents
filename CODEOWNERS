@@ -4,6 +4,13 @@
 # silently overridden and referenced non-existent teams @jol/*; removed).
 # Teams verified against the org on 2026-09-29: backend, data, devops,
 # frontend, security. Catch-all first; later, more specific rules win.
+#
+# SOLO-OPERATOR PHASE (pre-deployment, 2026-09-29):
+# The owner is the sole developer. Required code-owner review cannot be
+# fulfilled by a second person. See REVIEW_POLICY.md for the compensating
+# controls (48h cooling-off, self-review checklist, automated gates).
+# Admin bypass (protect-main ruleset) is the sanctioned merge lane until
+# a second reviewer joins the team.
 
 *                           @journeyoflife-org/security
 

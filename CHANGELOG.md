@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `REVIEW_POLICY.md` — solo-operator review policy (48h cooling-off period,
+  self-review checklist, automated gates as primary control, compliance
+  mapping, transition trigger to restore full CODEOWNERS when team grows).
+  §2.1 settles whether commits pushed after review begins restart the
+  cooling-off clock: substantive changes (code, tests, `config/`, `memory/`,
+  `prompts/`, the dependency set, or any declared control) restart it;
+  documentation, citation and evidence additions do not. The transition action
+  now names the root `CODEOWNERS` that GitHub actually reads, having previously
+  pointed at `.github/CODEOWNERS`, which was deleted under finding N1.
 - Initial repository scaffold: config/, skills/, memory/, context/, prompts/,
   tests/, scripts/, docs/, and GitHub workflows (CI, compliance check, CodeQL).
 - EU-only model routing configuration (`config/model-routing.yaml`).
