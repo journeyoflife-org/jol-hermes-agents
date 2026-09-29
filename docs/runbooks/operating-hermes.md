@@ -2,7 +2,9 @@
 
 ## Deploy a config/skill change
 
-1. Open PR; CI (validate + lint + tests + secret scan) must be green.
+1. Open PR; run `bash scripts/local-validate.sh` (validate + lint + secret
+   scan + tests) and paste the output into the PR. CI is manual-only
+   (`workflow_dispatch`), so no checks turn green on the PR by themselves.
 2. CODEOWNER review for `config/`, `memory/`, `agent-policy.yaml`.
 3. Merge → agent reloads declarative artefacts on next cycle.
 4. Verify: `python main.py validate` on the deployed copy; trigger a

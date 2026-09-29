@@ -53,3 +53,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontmatter parsing (`main.py`, `tests/test_skills.py`) is line-based and
   tolerates `---` horizontal rules inside skill bodies.
 - CI secret scan pinned to `zricethezav/gitleaks:v8.30.0` (was `:latest`).
+- Documentation corrected to match the manual-only CI reality introduced by
+  PR #12. `README.md`, `SECURITY.md`, `CONTRIBUTING.md`,
+  `docs/architecture.md` and `docs/runbooks/operating-hermes.md` each still
+  asserted that CI enforces controls automatically — "CI runs a secret scan on
+  every push", "Every push is scanned for secrets", "CI rejects these",
+  "CI fails the build on drift", "CI ... must be green". None of those runs on
+  a push or a PR any more. Each claim is restated as what actually executes:
+  the local `scripts/local-validate.sh` gate, with the workflows available on
+  demand via `gh workflow run <name>`.

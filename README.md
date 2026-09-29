@@ -17,7 +17,7 @@ prompts/         System / master / operational prompts
 tests/           Skill and memory-schema enforcement tests
 scripts/         Local validation, lint, smoke test
 docs/            Architecture, threat model, data flow, runbooks, DPIA
-.github/         CI: lint + skill tests + secret scan, compliance check, CodeQL
+.github/         CI workflows (on-demand only): lint + tests, secret scan, compliance, CodeQL
 ```
 
 ## Design principles
@@ -28,11 +28,13 @@ docs/            Architecture, threat model, data flow, runbooks, DPIA
    provider chain. Requests must never route outside the EU.
 3. **GDPR by default.** `memory/retention-policy.yaml` defines what is kept
    and what is purged; memory writes must conform to `memory/schema.yaml`.
-4. **Skills are contracts.** Every skill file carries YAML frontmatter and is
-   validated in CI (`tests/test_skills.py`).
+4. **Skills are contracts.** Every skill file carries YAML frontmatter,
+   enforced by `tests/test_skills.py` in the local gate and the on-demand CI
+   workflow.
 5. **No secrets in the repo.** Configuration uses env-var references
-   (`${ENV_VAR}`); only `config/example.env` is committed. CI runs a secret
-   scan on every push.
+   (`${ENV_VAR}`); only `config/example.env` is committed.
+   `scripts/local-validate.sh` scans tracked files before every merge; the CI
+   gitleaks workflow runs on demand (see Quick start).
 
 ## Quick start
 
@@ -45,6 +47,17 @@ make test       # run the test suite
 
 Copy `config/example.env` to `.env` (never committed) and fill in the values
 for your environment before running the agent.
+
+### The canonical pre-merge gate
+
+```bash
+bash scripts/local-validate.sh   # validate + ruff + yamllint + secret scan + tests
+```
+
+The GitHub Actions workflows are **manual-only** (`workflow_dispatch`) to stay
+within the Actions minute budget, so no status checks appear on a PR
+automatically. Trigger them on demand with `gh workflow run <name>` and attach
+the `local-validate.sh` output to the PR description instead.
 
 ## Documentation
 

@@ -35,12 +35,19 @@ Fallback until a real mailbox is published: contact the
 
 - Prompt-injection vectors in skills, prompts, or gateway messages.
 - Any configuration change that routes LLM traffic outside the EU.
-- Secrets committed to the repository (see CI secret scan).
+- Secrets committed to the repository (how scanning actually runs: see
+  Hardening baseline below).
 - Memory writes bypassing `memory/schema.yaml` or retention policy.
 
 ## Hardening baseline
 
 - EU-only LLM provider chain enforced in `config/model-routing.yaml`.
 - Secrets are supplied via environment variables only (`config/example.env`).
-- Every push is scanned for secrets (open-source gitleaks CLI in CI) and
-  analysed with CodeQL.
+- Secret scanning and static analysis do **not** run automatically. Since
+  2026-09-29 the CI workflows are manual-only (`workflow_dispatch`) to stay
+  within the GitHub Actions minute budget. Run them on demand:
+  `gh workflow run ci.yaml` (gitleaks) and `gh workflow run codeql.yml`.
+- The gate that does run before merge is local: `scripts/local-validate.sh`
+  (config validation, ruff, yamllint, a secret scan over tracked files, and
+  the test suite). `.pre-commit-config.yaml` additionally defines a gitleaks
+  hook for contributors who install it.
