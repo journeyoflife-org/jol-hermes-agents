@@ -55,7 +55,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 
 - [x] `.env` permissions `600` — enforced on audit host 2026-09-29 (`stat` verified); repeat on every deploy target
 - [x] `config/` contains no plaintext secrets
-- [x] Approval never "off" — level 3 disabled, gates on ≥level 2 (`config/agent-policy.yaml:36-50`)
+- [x] Approval never "off" — level 3 disabled, gates on ≥level 2 (`config/agent-policy.yaml` → `autonomy.level_0..level_3`)
 - [ ] Sandbox backend for tool execution decided & tested (runtime decision)
 - [ ] Telegram `allowed_chat_ids` populated and verified non-empty (operator + runtime gate)
 - [x] Memory store backup tooling: `scripts/backup_memory.py` (sqlite backup API + `integrity_check`, M8); run it as deploy step 0 and before Curator/GEPA
@@ -80,8 +80,10 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 ## Monitoring, backup & DR
 
 - [ ] Alerting on `provider_chain_exhausted` escalation
-      (`config/agent-policy.yaml:90-93`) wired in runtime
+      (`config/agent-policy.yaml` → `escalation.rules`) wired in runtime
 - [x] Retention purge tool implemented: `scripts/retention_purge.py` (hard_delete namespaces; `anonymise` explicitly runtime-owned, M5)
+- [x] Purge writes accountability evidence (2026-09-29): every mutating run appends an `audit.events` row **in the same transaction**, and the job fails closed — nothing deleted — when that table is absent
+- [ ] **Deploy prerequisite:** the memory store must contain one table per `memory/schema.yaml` namespace, including `audit.events` and `audit.approvals`, otherwise the scheduled purge aborts by design
 - [ ] Purge job scheduled (host cron, `daily` per policy) + monitored
 - [x] Backup of memory store (`scripts/backup_memory.py`); `skills/` snapshot = git tag/commit (M8)
 - [ ] Restore drill scheduled per `skills/infrastructure/backup-verify.md`

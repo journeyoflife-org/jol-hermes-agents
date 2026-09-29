@@ -24,8 +24,17 @@ purge = load_script("retention_purge")
 backup_mod = load_script("backup_memory")
 
 
-@pytest.fixture()
-def store(tmp_path: Path) -> Path:
+# Column contract for the audit namespace, mirroring memory/schema.yaml
+# (common fields id/created_at/source_skill + the audit.events fields).
+AUDIT_COLUMNS = (
+    "id TEXT, created_at TEXT, source_skill TEXT, run_id TEXT, "
+    "principal_ref TEXT, agent_id TEXT, skill_id TEXT, autonomy_level INTEGER, "
+    "tools_invoked TEXT, data_classes_touched TEXT, result TEXT, error TEXT, "
+    "evidence_ref TEXT"
+)
+
+
+def make_store(tmp_path: Path, *, with_audit: bool = True) -> Path:
     """A memory store per the schema.yaml contract: table per namespace."""
     db = tmp_path / "hermes-memory.sqlite"
     now = datetime.now(UTC)
@@ -39,9 +48,16 @@ def store(tmp_path: Path) -> Path:
     # ops.incidents: anonymise -> purge must skip it entirely.
     conn.execute('CREATE TABLE "ops.incidents" (id TEXT, created_at TEXT, severity TEXT)')
     conn.execute("INSERT INTO \"ops.incidents\" VALUES ('i1', ?, 'SEV2')", (old,))
+    if with_audit:
+        conn.execute(f'CREATE TABLE "audit.events" ({AUDIT_COLUMNS})')
     conn.commit()
     conn.close()
     return db
+
+
+@pytest.fixture()
+def store(tmp_path: Path) -> Path:
+    return make_store(tmp_path)
 
 
 def count(db: Path, table: str) -> int:
@@ -72,6 +88,45 @@ def test_purge_hard_deletes_only_expired_rows(store: Path, capsys):
     assert count(store, "ops.reports") == 1  # old row purged, fresh kept
     assert count(store, "ops.incidents") == 1  # anonymise namespace untouched
     assert "SKIPPED (anonymise" in out
+
+
+def test_purge_writes_audit_evidence(store: Path, capsys):
+    """Every mutating run must leave exactly one accountability record."""
+    assert purge.main(["--db", str(store), "--run-id", "purge-test-1"]) == 0
+    capsys.readouterr()
+    conn = sqlite3.connect(store)
+    try:
+        rows = conn.execute(
+            "SELECT run_id, agent_id, autonomy_level, data_classes_touched, result, "
+            'evidence_ref FROM "audit.events"'
+        ).fetchall()
+    finally:
+        conn.close()
+    assert len(rows) == 1
+    run_id, agent_id, level, touched, result, evidence = rows[0]
+    assert run_id == "purge-test-1"
+    assert agent_id == "agent:jol:hermes:retention:v1"
+    assert level == purge.PLATFORM_JOB_LEVEL  # not mistaken for a real autonomy level
+    assert "ops.reports:1" in touched
+    assert "ops.incidents" not in touched  # anonymise namespace is never touched
+    assert result == "deleted 1 row(s)"
+    assert evidence == "deletion_class:scheduled_retention_purge"
+
+
+def test_purge_fails_closed_without_audit_table(tmp_path: Path):
+    """No evidence trail -> no deletion, and the rollback must be real."""
+    db = make_store(tmp_path, with_audit=False)
+    with pytest.raises(SystemExit, match="ABORTED, nothing deleted"):
+        purge.main(["--db", str(db)])
+    assert count(db, "ops.reports") == 2  # expired row survived the rollback
+
+
+def test_purge_dry_run_writes_no_evidence(store: Path, capsys):
+    """A dry run has no side effects, so it must not create evidence either."""
+    assert purge.main(["--db", str(store), "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "no evidence row written" in out
+    assert count(store, "audit.events") == 0
 
 
 def test_purge_requires_db(tmp_path: Path):
