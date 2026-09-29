@@ -37,6 +37,40 @@ Rationale:
 
 **Exception:** Critical security fixes (e.g., leaked secret) may be merged immediately if documented with a `SECURITY` label and rationale.
 
+### 2.1 Do later commits restart the cooling-off period?
+
+The 48 hours run from the **later** of: the PR opening time, or the last *substantive* commit pushed to the branch.
+
+**Substantive — restarts the clock:**
+
+- Any change to code, scripts, or tests
+- Any change to `config/`, `memory/`, or `prompts/` — in this repository these *are* agent behaviour, not documentation
+- Any change to the dependency set (`pyproject.toml`, `uv.lock`)
+- Any change that alters a declared control, autonomy level, data class, retention period, or approval requirement
+
+**Non-substantive — does not restart the clock:**
+
+- Typographical and wording corrections
+- Citation fixes (paths, key names, line numbers) that do not change meaning
+- Adding verification evidence for work already under review
+- CHANGELOG entries describing commits already in the PR
+
+**Two conditions apply to every commit pushed after review has begun:**
+
+1. The author states the classification (substantive or not) in a PR comment at push time, and lists the files touched.
+2. The reviewer reads the **final** diff, not the diff as it stood when review began. Merging against a superseded review is not a review.
+
+**Why not a blanket rule in either direction:**
+
+- A blanket *restart* deadlocks a sole operator: review finds a correction, the correction restarts 48 hours, the next review finds another. A PR under active review could never merge.
+- A blanket *no restart* lets behaviour change after the review that approved it, which defeats the control entirely.
+
+Classifying by risk preserves the control's actual intent — that the content being merged was genuinely considered — without creating a deadlock.
+
+**Anti-abuse.** A commit that changes the *meaning* of a control is substantive however it is labelled; when in doubt, treat it as substantive. If a PR restarts the clock more than twice, the change was not ready for review — close it and reopen once the work is complete, rather than accumulating resets.
+
+*Provenance: added 2026-09-29 after PR #14 received a documentation-only follow-up commit while under review and this policy had no answer.*
+
 ### 3. Self-review checklist
 
 Before merging, the author must confirm (via PR comment or description) that they have reviewed:
@@ -66,7 +100,7 @@ This satisfies the **intent** of separation of duties: the author is accountable
 2. A second member is added to `@journeyoflife-org/security`, **or**
 3. The project moves from "definition repo" to "runtime repo" (C1 resolved)
 
-**Action:** Update `.github/CODEOWNERS` to require review, and remove the "solo-operator phase" note from this document.
+**Action:** Update the root `CODEOWNERS` — the only file GitHub reads, since `.github/CODEOWNERS` was removed under audit finding N1 — to require review, and remove the "solo-operator phase" note from both this document and the `CODEOWNERS` header comment.
 
 ---
 
