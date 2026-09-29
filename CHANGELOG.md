@@ -78,3 +78,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deployment guide cite the canonical artefacts instead of duplicating
   divergent copies of them. The dated 2026-08-13 `AUDIT_REPORT.md` snapshot is
   intentionally unchanged.
+- `docs/threat-model.md` re-reviewed, as its own review cadence requires
+  (triggers: policy change and memory schema change). Three threats added —
+  deletion without an evidence trail, the audit trail becoming a personal-data
+  store, and audit evidence altered after the fact — the last recorded as an
+  unenforced runtime gate rather than claimed as a control. A review log table
+  now dates each re-review.
+- `docs/data-flow.md`: rule 6 described the audit log as carrying `provider`
+  and `duration`, fields that never existed in any declared schema, and omitted
+  the principal and agent identity. It now matches `audit.events` /
+  `audit.approvals`; an accountability-evidence data category and the 730-day
+  audit retention are documented.
