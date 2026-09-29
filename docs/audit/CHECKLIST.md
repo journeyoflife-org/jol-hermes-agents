@@ -74,7 +74,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 - [x] Threat model + data flow + DPIA on file (`docs/`)
 - [ ] Release tag cut (v0.1.0) **after** the 2026-09-29 remediation batch merges; production never runs untagged `main` (L5)
 - [x] Pin gitleaks image tag `v8.30.0` (M1)
-- [x] Pin GitHub Action SHAs (M2) — all actions SHA-pinned 2026-09-29 at verified current majors (checkout/setup-python v7, codeql-action v4); Qodana CI job removal (7b49384) accepted, orphan comment in `qodana.yaml` fixed
+- [x] Pin GitHub Action SHAs (M2) — all actions SHA-pinned 2026-09-29 at verified current majors (checkout/setup-python v7, codeql-action v4); Qodana removed entirely upstream (PR #10 deleted `qodana.yaml`; deletion accepted in merge resolution)
 - [x] Single CODEOWNERS source of truth (N1) — root file merged with fine-grained rules, teams verified via `gh api`; stale `.github/CODEOWNERS` removed
 
 ## Monitoring, backup & DR

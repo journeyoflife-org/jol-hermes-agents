@@ -31,7 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - All GitHub Actions pinned to commit SHAs at verified current majors
   (checkout/setup-python v7, codeql-action v4); Qodana CI job removal
-  accepted (cost decision `7b49384`), `qodana.yaml` comment corrected.
+  accepted (cost decision `7b49384`); `qodana.yaml` subsequently removed
+  entirely by upstream PR #10 — deletion accepted in merge resolution.
 - CODEOWNERS consolidated into the single root file (GitHub reads one file
   only; root wins). Fine-grained path rules preserved and mapped to verified
   org teams; every rule includes `@journeyoflife-org/security`.
