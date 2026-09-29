@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `REVIEW_POLICY.md` — solo-operator review policy (48h cooling-off period,
+  self-review checklist, automated gates as primary control, compliance
+  mapping, transition trigger to restore full CODEOWNERS when team grows).
 - Initial repository scaffold: config/, skills/, memory/, context/, prompts/,
   tests/, scripts/, docs/, and GitHub workflows (CI, compliance check, CodeQL).
 - EU-only model routing configuration (`config/model-routing.yaml`).

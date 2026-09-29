@@ -290,3 +290,16 @@ run locally via `scripts/local-validate.sh` + `.pre-commit-config.yaml`.
 
 Round-3 verification: `yamllint` clean on modified workflows ·
 `local-validate.sh` all green (41/41 tests) · `ruff check` clean.
+
+## Remediation log — round 4 (2026-09-29, solo-operator governance)
+
+Context: owner is the sole developer. CODEOWNERS requires code-owner review
+but no second reviewer exists. Admin bypass used twice (PR #11, #12).
+Compensating controls documented in `REVIEW_POLICY.md`.
+
+| Item | Judgement | Fix & verification |
+|---|---|---|
+| Review bottleneck | **fixed (documented)** — solo operator cannot fulfill separation-of-duties via CODEOWNERS alone | `REVIEW_POLICY.md`: 48h cooling-off, self-review checklist, automated gates as primary control, compliance mapping (SOC2/ISO/GDPR), transition trigger. `CODEOWNERS` header references the policy. Admin bypass remains the sanctioned lane until team grows |
+
+Round-4 verification: `REVIEW_POLICY.md` created, `CODEOWNERS` updated with
+solo-operator-phase comment, CHANGELOG + audit docs updated.

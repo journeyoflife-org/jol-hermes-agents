@@ -76,6 +76,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 - [x] Pin gitleaks image tag `v8.30.0` (M1)
 - [x] Pin GitHub Action SHAs (M2) — all actions SHA-pinned 2026-09-29 at verified current majors (checkout/setup-python v7, codeql-action v4); Qodana removed entirely upstream (PR #10 deleted `qodana.yaml`; deletion accepted in merge resolution)
 - [x] Single CODEOWNERS source of truth (N1) — root file merged with fine-grained rules, teams verified via `gh api`; stale `.github/CODEOWNERS` removed
+- [x] Review policy for solo-operator phase: `REVIEW_POLICY.md` (48h cooling-off, self-review checklist, automated gates, compliance mapping, transition trigger)
 
 ## Monitoring, backup & DR
 
