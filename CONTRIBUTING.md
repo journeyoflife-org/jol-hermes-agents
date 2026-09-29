@@ -19,7 +19,9 @@ most contributions are YAML, Markdown skills, or prompts rather than Python.
 make setup validate lint test
 ```
 
-Or use `scripts/local-validate.sh`, which runs the same checks as CI.
+Or use `scripts/local-validate.sh` — the canonical pre-merge gate. The CI
+workflows are manual-only (`workflow_dispatch`), so nothing runs automatically
+on a PR: paste the script's output into the PR description as evidence.
 
 ## Commit & PR conventions
 
@@ -27,7 +29,9 @@ Or use `scripts/local-validate.sh`, which runs the same checks as CI.
 - Skill files: `kebab-case.md`, frontmatter required (`id`, `name`,
   `description`, `domain`, `risk_level`).
 - Config changes: explain the blast radius in the PR description.
-- Never commit `.env`, tokens, or customer data. CI rejects these.
+- Never commit `.env`, tokens, or customer data. Nothing rejects these
+  automatically — CI is manual-only — so run `scripts/local-validate.sh`
+  (which includes a secret scan over tracked files) before you push.
 
 ## Review requirements
 

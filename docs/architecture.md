@@ -39,8 +39,10 @@ declared in:
 | `prompts/*.md` | system, master, operational and validation prompts |
 | `context/AGENTS.md` | injected project context |
 
-`main.py validate` and `tests/` keep these artefacts internally consistent;
-CI fails the build on drift.
+`main.py validate` and `tests/` keep these artefacts internally consistent.
+`scripts/local-validate.sh` is the canonical gate and fails on drift; the CI
+workflows run the same checks on demand only (`workflow_dispatch`), to stay
+within the GitHub Actions minute budget.
 
 ## Execution model
 
@@ -64,5 +66,6 @@ CI fails the build on drift.
 
 See [threat-model.md](threat-model.md) and [data-flow.md](data-flow.md).
 Key controls: EU-only routing, deny-by-default gateway ACLs, mandatory
-confirmation for mutating actions, secret-free configuration, CI secret
-scan + CodeQL.
+confirmation for mutating actions, secret-free configuration, and a local
+secret scan in `scripts/local-validate.sh` (gitleaks and CodeQL run in CI on
+demand, not automatically).
