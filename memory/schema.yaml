@@ -59,6 +59,37 @@ namespaces:
       - { name: url, type: string, required: true }
       - { name: assignee, type: string, required: false }
 
+  # --- accountability evidence (config/agent-policy.yaml, `audit:` block) ---
+  # Append-only, metadata only, non-LLM. Never store prompt or completion
+  # bodies here. principal_ref is a pseudonymous label, NOT a raw chat ID
+  # (docs/dpia-ai-processing.md §2). DPIA re-assessed 2026-09-29 (v0.2).
+  # autonomy_level: 0-3 for agent-driven runs per config/agent-policy.yaml;
+  # -1 for platform jobs whose authority is the policy file itself (e.g. the
+  # scheduled retention purge), so a job is never mistaken for a real level.
+  - namespace: audit.events
+    description: Append-only execution evidence — who asked, which agent ran, what was touched, outcome.
+    fields:
+      - { name: run_id, type: string, required: true }
+      - { name: principal_ref, type: string, required: true }
+      - { name: agent_id, type: string, required: true }
+      - { name: skill_id, type: string, required: true }
+      - { name: autonomy_level, type: integer, required: true }
+      - { name: tools_invoked, type: string, required: true }
+      - { name: data_classes_touched, type: string, required: true }
+      - { name: result, type: string, required: true }
+      - { name: error, type: string, required: false }
+      - { name: evidence_ref, type: string, required: false }
+
+  - namespace: audit.approvals
+    description: Confirmation and second-factor records for autonomy level >= 2 and every ad-hoc or DSR deletion.
+    fields:
+      - { name: run_id, type: string, required: true }
+      - { name: requested_action, type: string, required: true }
+      - { name: approval_method, type: string, required: true }
+      - { name: second_factor, type: string, required: false }
+      - { name: approved_by, type: string, required: true }
+      - { name: decision, type: string, required: true }
+
 prohibited_content:
   - credentials
   - payment_data

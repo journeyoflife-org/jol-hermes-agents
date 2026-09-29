@@ -60,7 +60,45 @@ guardrails:
   autonomous_actions:
     read_only: allow
     mutating_infrastructure: require_confirmation
+    # Default stays strict. The single narrow exception is defined by
+    # control_definitions.deletion_classes below: the scheduled retention
+    # purge is mandated by policy (GDPR Art. 5(1)(e)), not chosen by an
+    # agent, so it is pre-approved but must still leave evidence.
     data_deletion: require_confirmation_and_second_factor
+
+# Definitions for the controls referenced above. An undefined control is an
+# unauditable control, and docs/audit/SECURITY_POSTURE.md:32 already cites
+# `require_confirmation_and_second_factor` as a satisfied control. Review
+# together with this policy (see policy.review_interval_days).
+control_definitions:
+  confirmation:
+    meaning: >-
+      Explicit human approval from a chat ID present in
+      HERMES_TELEGRAM_ALLOWED_CHAT_IDS (config/gateway/telegram.yaml:14),
+      persisted to the audit.approvals memory namespace BEFORE the action
+      executes. Approval inferred from conversational tone is not confirmation.
+  second_factor:
+    meaning: >-
+      A control independent of the LLM conversation that proves intent.
+      Exactly one of allowed_methods, named in the approval record.
+    allowed_methods:
+      - dry_run_reviewed   # reviewed output of scripts/retention_purge.py --dry-run
+      - single_use_token   # one-time token from a non-LLM service, consumed on use
+      - out_of_band        # operator confirmation on a second channel
+    not_a_second_factor: >-
+      A second LLM agent agreeing. Two model outputs share one trust domain,
+      so they are one factor, not two.
+  deletion_classes:
+    scheduled_retention_purge:
+      approval: pre_approved_by_policy   # GDPR Art. 5(1)(e) storage limitation
+      evidence: audit.events record required for every run
+      tool: scripts/retention_purge.py
+    ad_hoc_or_dsr_deletion:
+      approval: confirmation + second_factor
+      evidence: audit.approvals and audit.events records required
+      note: >-
+        Covers data-subject erasure requests and any deletion outside the
+        retention schedule (memory/retention-policy.yaml data_subject_rights).
 
 # Never permitted at any autonomy level.
 forbidden:

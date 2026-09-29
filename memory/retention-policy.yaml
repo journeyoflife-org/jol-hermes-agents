@@ -37,6 +37,18 @@ retention:
     retention_days: 30           # metadata only; the source of truth is Bitrix24
     purge_method: hard_delete
 
+  # Accountability evidence — DPIA re-assessed 2026-09-29 (v0.2), as required
+  # by the header of this file. hard_delete rather than anonymise because
+  # scripts/retention_purge.py SKIPS anonymise namespaces (runtime-owned), and
+  # an unexecuted retention rule is an unenforced one (audit finding M5).
+  audit.events:
+    retention_days: 730          # SOC 2 Type II / ISO 27001 evidence window
+    purge_method: hard_delete
+
+  audit.approvals:
+    retention_days: 730          # must outlive the actions they authorised
+    purge_method: hard_delete
+
 data_subject_rights:
   # How erasure/access requests are honoured for agent memory.
   erasure:
