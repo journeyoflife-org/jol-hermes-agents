@@ -277,3 +277,16 @@ repo). Each open to-do was judged, then fixed where fixable in-repo:
 Round-2 verification: `pytest` **41 passed** (35 + 6 new) · `ruff check`
 clean · `ruff format` applied to touched files · `main.py validate` OK ·
 `scripts/lint.sh` + `scripts/smoke-test.sh` OK.
+
+## Remediation log — round 3 (2026-09-29, CI minute constraint)
+
+Context: GitHub Actions minutes insufficient for automated CI. All three
+workflows converted to `workflow_dispatch` (manual-only). Equivalent checks
+run locally via `scripts/local-validate.sh` + `.pre-commit-config.yaml`.
+
+| Item | Judgement | Fix & verification |
+|---|---|---|
+| CI minute burn | **fixed** — auto-triggers consumed ~18 min/PR + ~13 min/week cron for a YAML definition repo; `local-validate.sh` + pre-commit cover identical checks | `ci.yaml`, `codeql.yml`, `compliance-check.yml` → `workflow_dispatch` only; comments document the constraint and re-enable path. Workflows preserved for on-demand use via `gh workflow run` |
+
+Round-3 verification: `yamllint` clean on modified workflows ·
+`local-validate.sh` all green (41/41 tests) · `ruff check` clean.

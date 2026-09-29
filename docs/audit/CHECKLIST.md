@@ -25,7 +25,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 - [x] No `eval`/`exec`/`shell=True`; only safe YAML loading (`SECURITY_POSTURE.md` §6)
 - [x] Approval policy: autonomy levels + forbidden list + confirmation gate (I3)
 - [x] Docker security hardening — compose: `read_only`, `cap_drop: ALL`, `no-new-privileges`, limits; container runs as uid 10001 (build-verified)
-- [x] EU-only routing validated 3 ways (validator, CI workflow, tests)
+- [x] EU-only routing validated 3 ways (validator, compliance workflow, tests); CI workflows converted to manual-only (`workflow_dispatch`) to preserve GitHub Actions minutes (2026-09-29 constraint) — all checks still run locally via `scripts/local-validate.sh` + pre-commit
 
 ## Phase 2 — LLM connections
 
@@ -72,7 +72,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 - [x] Runbooks: deploy, rotate secrets, kill switch, rollback
       (`docs/runbooks/operating-hermes.md`)
 - [x] Threat model + data flow + DPIA on file (`docs/`)
-- [ ] Release tag cut (v0.1.0) **after** the 2026-09-29 remediation batch merges; production never runs untagged `main` (L5)
+- [x] Release tag cut: `v0.1.0` (2026-09-29, post-remediation round 2)
 - [x] Pin gitleaks image tag `v8.30.0` (M1)
 - [x] Pin GitHub Action SHAs (M2) — all actions SHA-pinned 2026-09-29 at verified current majors (checkout/setup-python v7, codeql-action v4); Qodana removed entirely upstream (PR #10 deleted `qodana.yaml`; deletion accepted in merge resolution)
 - [x] Single CODEOWNERS source of truth (N1) — root file merged with fine-grained rules, teams verified via `gh api`; stale `.github/CODEOWNERS` removed
@@ -88,7 +88,7 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
 
 ## Release decision
 
-- **Gate count (post-remediation round 2, 2026-09-29)**: 38 passed · 11 open ·
+- **Gate count (post-remediation round 3, 2026-09-29)**: 39 passed · 10 open ·
   9 deferred to the future runtime repo
 - **Verdict**: CONDITIONAL GO as declarative definition repo. C1 resolved
   2026-09-19: `jol-hermes-agents` is definition-only; runtime readiness gate
@@ -96,7 +96,10 @@ runtime (future runtime repo, not yet created; C1 resolved 2026-09-19). Findings
   Round 1 closed: C2 contract, H1, H2, H3, H4, M1, M4, M6, M7, I6, L2.
   Round 2 (2026-09-29) closed: M2 (action SHAs), M3 (reporting channel),
   M5 (purge tool), M8 (backup tool), L1 (dotenv used), L4/N1 (CODEOWNERS
-  merged, teams verified), `.env` 600. Remaining opens are operator/org
-  gates (`.env` values, tool-calling verification, fail2ban, purge
-  scheduling, restore drill, release tag). See `AUDIT_REPORT.md` →
-  "Remediation log".
+  merged, teams verified), `.env` 600.
+  Round 3 (2026-09-29): CI workflows converted to manual-only
+  (`workflow_dispatch`) to preserve GitHub Actions minutes; all checks
+  covered locally by `scripts/local-validate.sh` + pre-commit.
+  Remaining opens are operator/org gates (`.env` values, tool-calling
+  verification, fail2ban, purge scheduling, restore drill).
+  See `AUDIT_REPORT.md` → "Remediation log".

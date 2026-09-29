@@ -1,20 +1,10 @@
 name: Compliance check
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "config/**"
-      - "memory/**"
-      - "skills/**"
-  pull_request:
-    paths:
-      - "config/**"
-      - "memory/**"
-      - "skills/**"
-  schedule:
-    # Weekly drift check on the default branch.
-    - cron: "30 6 * * 1"
+  # Manual-only: GitHub Actions minutes are limited (audit constraint 2026-09-29).
+  # EU routing + retention coverage are already asserted by `main.py validate`.
+  # Run on-demand via: gh workflow run compliance-check.yml
+  workflow_dispatch:
 
 permissions:
   contents: read

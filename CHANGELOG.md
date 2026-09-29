@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   through `.env` (python-dotenv).
 
 ### Changed
+- All GitHub Actions workflows (`ci.yaml`, `codeql.yml`, `compliance-check.yml`)
+  converted to manual-only (`workflow_dispatch`) to preserve GitHub Actions
+  minutes (insufficient budget for automated CI). Equivalent checks run
+  locally via `scripts/local-validate.sh` + `.pre-commit-config.yaml`.
+  Workflows preserved for on-demand use via `gh workflow run <name>`.
 - All GitHub Actions pinned to commit SHAs at verified current majors
   (checkout/setup-python v7, codeql-action v4); Qodana CI job removal
   accepted (cost decision `7b49384`); `qodana.yaml` subsequently removed

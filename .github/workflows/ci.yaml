@@ -1,9 +1,10 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  # Manual-only: GitHub Actions minutes are limited (audit constraint 2026-09-29).
+  # Equivalent checks run locally via `scripts/local-validate.sh` + pre-commit.
+  # Re-enable auto-triggers when minute budget allows.
+  workflow_dispatch:
 
 permissions:
   contents: read
