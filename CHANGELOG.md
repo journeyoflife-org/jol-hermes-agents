@@ -22,8 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validator: env-var contract check (every env var referenced in `config/`,
   including `*_env` keys, must exist in `config/example.env`) and
   model-pinning + `context_length >= 64000` enforcement.
+- Memory tooling (audit round 2): `scripts/retention_purge.py` executes the
+  GDPR retention policy (hard_delete; `anonymise` reported as runtime-owned)
+  and `scripts/backup_memory.py` snapshots the store via the sqlite backup
+  API with `PRAGMA integrity_check`; both resolve `HERMES_MEMORY_PATH`
+  through `.env` (python-dotenv).
 
 ### Changed
+- All GitHub Actions pinned to commit SHAs at verified current majors
+  (checkout/setup-python v7, codeql-action v4); Qodana CI job removal
+  accepted (cost decision `7b49384`), `qodana.yaml` comment corrected.
+- CODEOWNERS consolidated into the single root file (GitHub reads one file
+  only; root wins). Fine-grained path rules preserved and mapped to verified
+  org teams; every rule includes `@journeyoflife-org/security`.
+- `SECURITY.md`: vulnerability reporting via GitHub private advisories
+  (enablement gate noted); placeholder email marked do-not-use.
 - `config/model-routing.yaml`: pinned primary model to `mistral-large-2411`
   (was the mutable `-latest` alias) and declared `context_length` per provider.
 - `config/gateway/telegram.yaml`: documented the ACL contract (CSV of numeric

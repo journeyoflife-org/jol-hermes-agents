@@ -159,8 +159,7 @@ def env_var_references(config_dir: Path) -> set[str]:
         # Ignore comments so documentation examples ("${ENV_VAR}") are not
         # treated as live references.
         stripped = "\n".join(
-            re.split(r"(?:^|\s)#", line, maxsplit=1)[0]
-            for line in text.splitlines()
+            re.split(r"(?:^|\s)#", line, maxsplit=1)[0] for line in text.splitlines()
         )
         refs.update(ENV_REF_PATTERN.findall(stripped))
         # Bare env-var names via the *_env key convention.
@@ -194,9 +193,7 @@ def validate_env_contract() -> list[str]:
     referenced = env_var_references(ROOT / "config")
     declared = example_env_keys(EXAMPLE_ENV_PATH)
     for var in sorted(referenced - declared):
-        errors.append(
-            f"env contract: {var} referenced in config/ but absent from {env_label}"
-        )
+        errors.append(f"env contract: {var} referenced in config/ but absent from {env_label}")
     return errors
 
 
@@ -241,12 +238,7 @@ def validate_memory() -> list[str]:
 
 
 def validate() -> int:
-    errors = (
-        validate_config()
-        + validate_skills()
-        + validate_memory()
-        + validate_env_contract()
-    )
+    errors = validate_config() + validate_skills() + validate_memory() + validate_env_contract()
     if errors:
         for err in errors:
             print(f"FAIL  {err}", file=sys.stderr)

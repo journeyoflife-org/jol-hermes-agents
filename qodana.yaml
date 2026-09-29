@@ -1,8 +1,9 @@
 # Qodana — Static Analysis Configuration
 # https://www.jetbrains.com/help/qodana/
 #
+# CI job removed (cost decision, commit 7b49384); CodeQL covers CI static
+# analysis. This file is kept for on-demand local/IDE scans only.
 # Run locally:  qodana scan
-# Run in CI:    see .github/workflows/ci.yaml (qodana job)
 # PyCharm:      Tools → Qodana → Try Code Analysis with Qodana
 ---
 version: "1.0"

@@ -252,3 +252,28 @@ Post-remediation verification (all exit 0): `main.py validate` · `pytest`
 `scripts/local-validate.sh` · `./install.sh` (idempotent re-run) ·
 `docker compose config` · `docker build` · in-container validate as
 non-root user.
+
+## Remediation log — round 2 (2026-09-29, judged & fixed, verified)
+
+Context: round 1 merged as PR #8 (`6646790`); SOPS enablement (#6) and a
+root CODEOWNERS (#7) landed since. C1 was resolved by scoping decision on
+2026-09-19 (definition-only repo; runtime gate moves to a future runtime
+repo). Each open to-do was judged, then fixed where fixable in-repo:
+
+| Item | Judgement | Fix & verification |
+|---|---|---|
+| N1 (new) | **fixed** — two CODEOWNERS files existed; GitHub honours the root file only, so PR #7 silently disabled the fine-grained DPO/ops rules, which also referenced non-existent teams (`@jol/*` — org teams verified via `gh api`: backend, data, devops, frontend, security) | Merged into a single root `CODEOWNERS` (catch-all `security` first, specific rules last-match-win, every rule includes security); deleted `.github/CODEOWNERS` |
+| M2 | **fixed** — SHA-pinnable; Dependabot branches showed v4/v5 pins were stale, and `qodana-action@v2026.1` was a *moving branch ref* | All actions pinned to SHAs resolved via `git ls-remote` at current majors (checkout/setup-python v7, codeql-action v4). Qodana CI removal (`7b49384`, cost decision) accepted; stale CI reference in `qodana.yaml` corrected |
+| M3 | **fixed as far as repo allows** — no real mailbox exists to publish; GitHub private advisories are the verifiable channel | `SECURITY.md` now documents the private-advisory path + explicit org-admin enablement gate; placeholder email marked do-not-use |
+| M5 | **fixed (hard_delete scope)** — purge must be mechanically executable per `retention-policy.yaml`; `anonymise` needs personal-data column knowledge the policy doesn't declare | `scripts/retention_purge.py`: policy-driven, `--dry-run`, ISO-8601 cutoff per namespace, `anonymise` loudly SKIPPED (runtime-owned). 4 tests: expiry-only deletion, dry-run no-op, anonymise untouched, missing-store fail-fast |
+| M8 | **fixed** | `scripts/backup_memory.py`: sqlite online backup API + `PRAGMA integrity_check`, timestamped target. 2 tests |
+| L1 | **fixed by use, not removal** — both new scripts resolve `HERMES_MEMORY_PATH` via `.env`/`python-dotenv` | Dependency now load-bearing |
+| `.env` 600 gate | **fixed** | `.env` existed at `644`; `chmod 600` applied and `stat`-verified; file confirmed git-ignored |
+| USER.md (I1) | **judged not needed** | Team-scoped ops agent; requester identity is the Telegram chat-ID ACL |
+| L3 | **judged: accept** | ruff + ruff-format (pre-commit) + yamllint already enforce style; another pinned checker adds cost, not signal |
+| L5 | **judged: defer** | Tag `v0.1.0` after this batch merges (workflow: MERGE → VERIFY AGAIN) |
+| C1 | **closed by scoping decision 2026-09-19** | Runtime gates (chat smoke tests, failover, ACL runtime assertion) move to the future runtime repo |
+
+Round-2 verification: `pytest` **41 passed** (35 + 6 new) · `ruff check`
+clean · `ruff format` applied to touched files · `main.py validate` OK ·
+`scripts/lint.sh` + `scripts/smoke-test.sh` OK.
