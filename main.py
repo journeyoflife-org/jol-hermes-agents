@@ -56,9 +56,15 @@ ALLOWED_REGIONS = {"eu", "eu-central", "eu-west"}
 ENV_REF_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 EXAMPLE_ENV_PATH = ROOT / "config" / "example.env"
 
-# Mandate: every routed model must offer at least a 64k token context window
-# and must be pinned to a stable, versioned identifier (never *-latest).
+# Mandate: every routed model must be pinned to a stable, versioned identifier
+# (never *-latest) and must clear a context-window floor. The floor is per
+# provider kind: cloud SaaS must clear 64k (its models natively offer it); a
+# self-hosted model is held to its own native window (>=32k), because pushing a
+# self-hosted model above native requires YaRN, which degrades quality. See
+# docs/dpia-ai-processing.md and jol-llm docs/05-models/model-registry.md.
+PROVIDER_KINDS = {"saas", "self-hosted"}
 MIN_CONTEXT_LENGTH = 64_000
+SELF_HOSTED_MIN_CONTEXT_LENGTH = 32_000
 
 
 def load_yaml(path: Path) -> dict:
@@ -102,22 +108,60 @@ def check_required_files(paths: list[Path], kind: str) -> list[str]:
 
 
 def check_provider_models(routing: dict) -> list[str]:
-    """Enforce pinned model identifiers and a >=64k context window."""
+    """Enforce known kinds, pinned model identifiers and a kind-aware floor."""
     errors: list[str] = []
     for provider in routing.get("providers", []):
         name = provider.get("name")
+        kind = str(provider.get("kind", "saas"))
+        if kind not in PROVIDER_KINDS:
+            errors.append(
+                f"model-routing.yaml: provider '{name}' has unknown kind '{kind}' "
+                f"(expected one of {sorted(PROVIDER_KINDS)})"
+            )
         model = str(provider.get("model", ""))
         if model == "latest" or model.endswith("-latest"):
             errors.append(
                 f"model-routing.yaml: provider '{name}' model '{model}' is an "
                 f"unpinned mutable alias; pin a versioned model identifier"
             )
+        floor = (SELF_HOSTED_MIN_CONTEXT_LENGTH if kind == "self-hosted"
+                 else MIN_CONTEXT_LENGTH)
         context = provider.get("context_length")
-        if not isinstance(context, int) or context < MIN_CONTEXT_LENGTH:
+        if not isinstance(context, int) or context < floor:
             errors.append(
-                f"model-routing.yaml: provider '{name}' must declare an integer "
-                f"context_length >= {MIN_CONTEXT_LENGTH}"
+                f"model-routing.yaml: provider '{name}' (kind '{kind}') must declare "
+                f"an integer context_length >= {floor}"
             )
+    return errors
+
+
+def check_provider_transport(routing: dict) -> list[str]:
+    """A self-hosted provider must present a verifiable mTLS transport.
+
+    Cloud SaaS authenticates with an API key alone; a self-hosted endpoint on
+    the internal network requires an https base_url plus a bearer key AND the
+    mTLS client cert/key/CA references, or the connection silently downgrades
+    to unauthenticated. Requiring all four here is what keeps the "air-gapped,
+    two-factor" claim in jol-llm real rather than aspirational.
+    """
+    errors: list[str] = []
+    for provider in routing.get("providers", []):
+        if str(provider.get("kind", "saas")) != "self-hosted":
+            continue
+        name = provider.get("name")
+        base_url = str(provider.get("base_url", ""))
+        if not base_url.startswith("https://"):
+            errors.append(
+                f"model-routing.yaml: self-hosted provider '{name}' must declare an "
+                f"https base_url (mTLS endpoint)"
+            )
+        for field in ("api_key_env", "tls_client_cert_env",
+                      "tls_client_key_env", "tls_ca_cert_env"):
+            if not str(provider.get(field, "")).strip():
+                errors.append(
+                    f"model-routing.yaml: self-hosted provider '{name}' must set "
+                    f"'{field}' (bearer key + mTLS cert/key/CA)"
+                )
     return errors
 
 
@@ -135,6 +179,7 @@ def validate_config() -> list[str]:
                     f"region '{region}' is not EU-only"
                 )
         errors.extend(check_provider_models(routing))
+        errors.extend(check_provider_transport(routing))
     return errors
 
 

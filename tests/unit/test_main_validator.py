@@ -118,3 +118,55 @@ def test_validate_env_contract_flags_missing_variable(tmp_path: Path, monkeypatc
 
 def test_validate_env_contract_passes_on_the_current_repo():
     assert main.validate_env_contract() == []
+
+
+# --- self-hosted mTLS provider schema (Phase 2) ---
+
+
+def _self_hosted(**over):
+    prov = {
+        "name": "sh", "kind": "self-hosted", "model": "qwen3-32b-q8_0",
+        "context_length": 32768, "base_url": "https://llm.jol.internal:8443/v1",
+        "api_key_env": "K", "tls_client_cert_env": "C",
+        "tls_client_key_env": "CK", "tls_ca_cert_env": "CA",
+    }
+    prov.update(over)
+    return {"providers": [prov]}
+
+
+def test_self_hosted_accepts_native_32k_context():
+    # Native (no-YaRN) window passes the self-hosted floor; a SaaS provider of
+    # the same size must still be rejected against the 64k floor.
+    assert main.check_provider_models(_self_hosted()) == []
+    saas = {"providers": [{"name": "p", "model": "x-2411", "context_length": 32768}]}
+    assert any("64000" in e for e in main.check_provider_models(saas))
+
+
+def test_self_hosted_below_native_floor_is_rejected():
+    errors = main.check_provider_models(_self_hosted(context_length=31999))
+    assert any("32000" in e for e in errors)
+
+
+def test_unknown_kind_is_rejected():
+    errors = main.check_provider_models(_self_hosted(kind="on-prem"))
+    assert any("unknown kind" in e for e in errors)
+
+
+def test_self_hosted_requires_https_base_url_and_all_transport_refs():
+    routing = _self_hosted(base_url="http://llm.jol.internal:8443/v1")
+    del routing["providers"][0]["tls_ca_cert_env"]
+    errors = main.check_provider_transport(routing)
+    assert any("https base_url" in e for e in errors)
+    assert any("tls_ca_cert_env" in e for e in errors)
+
+
+def test_saas_provider_is_exempt_from_transport_checks():
+    saas = {"providers": [{"name": "p", "model": "x-2411", "context_length": 128000}]}
+    assert main.check_provider_transport(saas) == []
+
+
+def test_current_routing_declares_a_valid_self_hosted_provider():
+    routing = main.load_yaml(main.ROOT / "config" / "model-routing.yaml")
+    kinds = {pr.get("kind", "saas") for pr in routing["providers"]}
+    assert "self-hosted" in kinds
+    assert main.check_provider_transport(routing) == []
