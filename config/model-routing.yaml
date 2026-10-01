@@ -2,7 +2,10 @@
 #
 # Policy: every provider MUST have an EU region. CI (main.py validate and
 # compliance-check workflow) fails the build if a non-EU region appears here.
-# Do not add providers without an EU DPA in place — see docs/dpia-ai-processing.md.
+# Cloud (saas) providers require an EU DPA before use — see docs/dpia-ai-processing.md.
+# A self-hosted provider has NO third-party DPA because there is no exporter: JOL is both
+# controller and processor. Its compliance basis is the jol-llm ISO 27001 / GDPR Art. 32
+# evidence and the two-factor mTLS transport enforced by check_provider_transport in main.py.
 
 default: primary
 
@@ -27,7 +30,26 @@ providers:
     timeout_s: 90
     max_retries: 1
 
+  - name: self_hosted_lt01
+    kind: self-hosted            # validated by check_provider_transport (main.py)
+    vendor: jol-llm              # air-gapped Ollama on bare-metal llm-prod-lt01 (Lithuania, EU)
+    region: eu                   # EU by construction; no data crosses the border
+    base_url: https://llm.jol.internal:8443/v1   # mTLS + Bearer (OpenAI-compatible subset)
+    model: qwen3-32b-q8_0        # pinned registry name — never *-latest (audit H2)
+    context_length: 32768        # native Qwen3-32B window; no YaRN (>=32000 self-hosted floor)
+    api_key_env: HERMES_SELF_HOSTED_API_KEY
+    tls_client_cert_env: HERMES_SELF_HOSTED_TLS_CERT   # mTLS client cert
+    tls_client_key_env: HERMES_SELF_HOSTED_TLS_KEY      # mTLS client key
+    tls_ca_cert_env: HERMES_SELF_HOSTED_TLS_CA          # internal CA pin
+    timeout_s: 600               # single-slot CPU ~1.4 tok/s; generous so it degrades, not flakes
+    max_retries: 0               # retry would just re-queue a busy slot
+
 routing:
+  # NOTE (Phase 2 scope): the provider above is DECLARED and schema-validated here, but the
+  # failover chain below still selects SaaS only. Routing special-category data to
+  # self_hosted_lt01 is Phase 3 (data-class routing); do not treat this entry as live
+  # selection until then. Connectivity is UNVERIFIED pending on-box deploy (jol-llm is
+  # air-gapped) — see docs/audit/LLM_CONNECTIVITY_MATRIX.md.
   strategy: failover             # primary -> fallback, in order
   fallback_on:
     - timeout
