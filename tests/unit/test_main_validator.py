@@ -170,3 +170,61 @@ def test_current_routing_declares_a_valid_self_hosted_provider():
     kinds = {pr.get("kind", "saas") for pr in routing["providers"]}
     assert "self-hosted" in kinds
     assert main.check_provider_transport(routing) == []
+
+
+# --- data-class routing (Phase 3) ---
+
+
+def _rt(chains, *, providers=None, blocked=("credentials", "payment_data"), default_chain=None):
+    providers = providers if providers is not None else [
+        {"name": "saas_p", "kind": "saas"},
+        {"name": "sh", "kind": "self-hosted"},
+    ]
+    rb = {"chains": chains, "blocked_data_classes": list(blocked)}
+    if default_chain is not None:
+        rb["default_chain"] = default_chain
+    return {"providers": providers, "routing": rb}
+
+
+def test_routing_sensitive_must_be_self_hosted():
+    ok = _rt([{"name": "sensitive", "data_classes": ["personal_data"], "providers": ["sh"]}])
+    assert main.check_routing_policy(ok) == []
+    bad = _rt([{"name": "sensitive", "data_classes": ["special_category"],
+               "providers": ["saas_p"]}])
+    errors = main.check_routing_policy(bad)
+    assert any("fail-closed" in e for e in errors)
+
+
+def test_routing_rejects_undeclared_provider_and_unknown_class():
+    bad = _rt([{"name": "c", "data_classes": ["mystery_class"], "providers": ["ghost"]}])
+    errors = main.check_routing_policy(bad)
+    assert any("undeclared provider" in e for e in errors)
+    assert any("unknown data class" in e for e in errors)
+
+
+def test_routing_rejects_ambiguous_and_blocked_classes():
+    amb = _rt([
+        {"name": "a", "data_classes": ["operational_telemetry"], "providers": ["saas_p"]},
+        {"name": "b", "data_classes": ["operational_telemetry"], "providers": ["sh"]},
+    ])
+    assert any("ambiguous" in e for e in main.check_routing_policy(amb))
+    blocked = _rt([{"name": "x", "data_classes": ["credentials"], "providers": ["sh"]}])
+    assert any("blocked data class" in e for e in main.check_routing_policy(blocked))
+
+
+def test_routing_default_chain_must_exist():
+    rt = _rt([{"name": "standard", "data_classes": ["operational_telemetry"],
+              "providers": ["saas_p"]}], default_chain="nonexistent")
+    assert any("not a declared chain" in e for e in main.check_routing_policy(rt))
+
+
+def test_routing_legacy_failover_shape_is_exempt():
+    # A routing block with no `chains` (legacy failover) yields no data-class errors.
+    legacy = {"providers": [{"name": "p", "kind": "saas"}],
+              "routing": {"strategy": "failover"}}
+    assert main.check_routing_policy(legacy) == []
+
+
+def test_current_routing_passes_data_class_policy():
+    routing = main.load_yaml(main.ROOT / "config" / "model-routing.yaml")
+    assert main.check_routing_policy(routing) == []
