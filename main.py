@@ -66,6 +66,12 @@ PROVIDER_KINDS = {"saas", "self-hosted"}
 MIN_CONTEXT_LENGTH = 64_000
 SELF_HOSTED_MIN_CONTEXT_LENGTH = 32_000
 
+# Data-class routing vocabulary. check_routing_policy rejects any class not declared
+# here so the routing table cannot drift silently from the model. Sensitive classes
+# are fail-closed: they may be served ONLY by a self-hosted provider.
+KNOWN_DATA_CLASSES = {"operational_telemetry", "personal_data", "special_category"}
+SENSITIVE_DATA_CLASSES = {"personal_data", "special_category"}
+
 
 def load_yaml(path: Path) -> dict:
     with path.open(encoding="utf-8") as fh:
@@ -165,6 +171,71 @@ def check_provider_transport(routing: dict) -> list[str]:
     return errors
 
 
+def check_routing_policy(routing: dict) -> list[str]:
+    """Enforce data-class routing as a hard control, not a comment.
+
+    Sensitive data (personal / special-category) must be fail-closed to a
+    self-hosted provider; routing it to a third-party SaaS endpoint is exactly
+    the GDPR Art. 9 / exfiltration risk the EU-only chain exists to prevent, so
+    the build fails rather than warns. Also rejects undeclared providers, unknown
+    or double-routed data classes, routing a blocked class, and a bad
+    default_chain. Legacy failover configs (no routing.chains) are exempt.
+    """
+    errors: list[str] = []
+    providers = routing.get("providers", [])
+    routing_block = routing.get("routing", {})
+    chains = routing_block.get("chains")
+    if not providers or not chains:
+        return errors
+    by_name = {p.get("name"): str(p.get("kind", "saas")) for p in providers}
+    blocked = set(routing_block.get("blocked_data_classes", []))
+    chain_names = {c.get("name") for c in chains}
+    seen: dict[str, str] = {}
+    for chain in chains:
+        cname = chain.get("name")
+        cps = list(chain.get("providers", []))
+        if not cps:
+            errors.append(f"model-routing.yaml: routing chain '{cname}' lists no providers")
+        for pname in cps:
+            if pname not in by_name:
+                errors.append(
+                    f"model-routing.yaml: routing chain '{cname}' references undeclared "
+                    f"provider '{pname}'"
+                )
+        for dc in list(chain.get("data_classes", [])):
+            if dc not in KNOWN_DATA_CLASSES:
+                errors.append(
+                    f"model-routing.yaml: routing chain '{cname}' uses unknown data class "
+                    f"'{dc}' (known: {sorted(KNOWN_DATA_CLASSES)})"
+                )
+            if dc in blocked:
+                errors.append(
+                    f"model-routing.yaml: routing chain '{cname}' routes blocked data class "
+                    f"'{dc}' — blocked classes must never be sent to any provider"
+                )
+            if dc in seen:
+                errors.append(
+                    f"model-routing.yaml: data class '{dc}' is routed by two chains "
+                    f"('{seen[dc]}' and '{cname}'); routing is ambiguous"
+                )
+            seen[dc] = cname
+            if dc in SENSITIVE_DATA_CLASSES:
+                for pname in cps:
+                    if by_name.get(pname) != "self-hosted":
+                        errors.append(
+                            f"model-routing.yaml: sensitive data class '{dc}' in chain "
+                            f"'{cname}' may not route to provider '{pname}' (kind "
+                            f"'{by_name.get(pname, 'undeclared')}'); sensitive data is "
+                            f"fail-closed to a self-hosted provider"
+                        )
+    dflt = routing_block.get("default_chain")
+    if dflt is not None and dflt not in chain_names:
+        errors.append(
+            f"model-routing.yaml: routing.default_chain '{dflt}' is not a declared chain"
+        )
+    return errors
+
+
 def validate_config() -> list[str]:
     errors = check_required_files(REQUIRED_CONFIG_FILES, "config")
 
@@ -180,6 +251,7 @@ def validate_config() -> list[str]:
                 )
         errors.extend(check_provider_models(routing))
         errors.extend(check_provider_transport(routing))
+        errors.extend(check_routing_policy(routing))
     return errors
 
 

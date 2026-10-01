@@ -45,17 +45,23 @@ providers:
     max_retries: 0               # retry would just re-queue a busy slot
 
 routing:
-  # NOTE (Phase 2 scope): the provider above is DECLARED and schema-validated here, but the
-  # failover chain below still selects SaaS only. Routing special-category data to
-  # self_hosted_lt01 is Phase 3 (data-class routing); do not treat this entry as live
-  # selection until then. Connectivity is UNVERIFIED pending on-box deploy (jol-llm is
-  # air-gapped) — see docs/audit/LLM_CONNECTIVITY_MATRIX.md.
-  strategy: failover             # primary -> fallback, in order
-  fallback_on:
-    - timeout
-    - rate_limited
-    - server_error
-  # Never send these categories to any provider.
+  # Data-class routing (Phase 3): a request is served only by the providers cleared
+  # for its data classification. This is enforced by check_routing_policy in main.py —
+  # routing a sensitive class to a SaaS provider, an undeclared provider/class, an
+  # ambiguous double-routed class, or a blocked class all fail the build.
+  strategy: data_class
+  chains:
+    - name: sensitive
+      data_classes: [personal_data, special_category]
+      providers: [self_hosted_lt01]   # fail-closed: on-prem only, data never leaves lt01
+      # No fallback to SaaS: if lt01 is unavailable the request degrades gracefully
+      # (agent-policy escalation provider_chain_exhausted), it is NOT exported.
+    - name: standard
+      data_classes: [operational_telemetry]
+      providers: [primary, fallback]   # EU SaaS failover chain
+      fallback_on: [timeout, rate_limited, server_error]
+  default_chain: standard
+  # Never sent to ANY provider, self-hosted included.
   blocked_data_classes:
     - credentials
     - payment_data
